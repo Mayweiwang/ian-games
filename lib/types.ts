@@ -103,6 +103,73 @@ export interface GestureDetectionOptions {
 // Callback type for gesture events
 export type OnGestureCallback = (gesture: GestureEvent) => void;
 
+// ============================================
+// Game Engine Types
+// ============================================
+
+// Arrow in the game
+export interface Arrow {
+  id: string;
+  lane: 0 | 1 | 2;
+  spawnTime: number;
+  position: number;  // 0 = top of screen, 1 = bottom
+  hit: boolean;
+  missed: boolean;
+  hitRating?: 'perfect' | 'good' | 'miss';
+}
+
+// Hit rating type
+export type HitRating = 'perfect' | 'good' | 'miss';
+
+// Game status
+export type GameStatus = 'idle' | 'countdown' | 'playing' | 'paused' | 'ended';
+
+// Difficulty level
+export type DifficultyLevel = 'easy' | 'medium' | 'hard';
+
+// Full game state
+export interface GameState {
+  status: GameStatus;
+  score: number;
+  combo: number;
+  maxCombo: number;
+  perfectHits: number;
+  goodHits: number;
+  misses: number;
+  arrows: Arrow[];
+  difficulty: DifficultyLevel;
+}
+
+// Game statistics (for end game summary)
+export interface GameStats {
+  score: number;
+  maxCombo: number;
+  perfectHits: number;
+  goodHits: number;
+  misses: number;
+  totalArrows: number;
+  accuracy: number;  // percentage 0-100
+  duration: number;  // game duration in ms
+}
+
+// Hit result from processing a gesture
+export interface HitResult {
+  hit: boolean;
+  arrow?: Arrow;
+  rating?: HitRating;
+  score?: number;
+}
+
+// Game engine control functions
+export interface GameControls {
+  start: () => void;
+  pause: () => void;
+  resume: () => void;
+  end: () => void;
+  reset: () => void;
+  setDifficulty: (difficulty: DifficultyLevel) => void;
+}
+
 // Skeleton connection pairs for drawing pose overlay
 export const POSE_CONNECTIONS: [number, number][] = [
   // Face
