@@ -84,6 +84,25 @@ export type OnPoseCallback = (pose: PoseResult | null) => void;
 // Calibration callback
 export type OnCalibrationComplete = (data: CalibrationData) => void;
 
+// Gesture detection types
+export type GestureType = 'wave-left' | 'wave-right' | 'jump' | null;
+
+export interface GestureEvent {
+  type: Exclude<GestureType, null>;
+  timestamp: number;
+  confidence: number;
+}
+
+export interface GestureDetectionOptions {
+  waveThreshold?: number;      // min Y movement for wave (default 0.05)
+  waveTimeWindow?: number;     // ms window to detect wave (default 500)
+  jumpThreshold?: number;      // min Y rise for jump (default 0.08)
+  debounceTime?: number;       // ms between same gesture (default 500)
+}
+
+// Callback type for gesture events
+export type OnGestureCallback = (gesture: GestureEvent) => void;
+
 // Skeleton connection pairs for drawing pose overlay
 export const POSE_CONNECTIONS: [number, number][] = [
   // Face
