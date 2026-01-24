@@ -1,0 +1,1 @@
+export { SonicBackground } from './SonicBackground';
