@@ -8,6 +8,8 @@ import { ScoreDisplay, ScoreOverlay } from './ScoreDisplay';
 import { GameOverModal } from './GameOverModal';
 import { useGestureDetection } from '@/hooks/useGestureDetection';
 import { useGameEngine } from '@/hooks/useGameEngine';
+import { useBackgroundMusic } from '@/hooks/useBackgroundMusic';
+import { useSoundEffects } from '@/hooks/useSoundEffects';
 import type {
   CalibrationData,
   PoseResult,
@@ -58,6 +60,24 @@ export function DanceGame({
   const hitFeedbackIdRef = useRef(0);
   const gestureDisableRef = useRef<(() => void) | null>(null);
 
+  // Background music hook
+  const {
+    isPlaying: isMusicPlaying,
+    toggle: toggleMusic,
+    play: playMusic,
+    pause: pauseMusic,
+    setVolume,
+    volume,
+    isReady: isMusicReady,
+  } = useBackgroundMusic({
+    src: '/sounds/game-music.mp3',
+    volume: 0.4,
+    loop: true,
+  });
+
+  // Sound effects hook
+  const { playPerfect, playGood } = useSoundEffects(0.7);
+
   // Game engine hook - use onGameEnd callback to handle phase transition
   const {
     gameState,
@@ -73,6 +93,13 @@ export function DanceGame({
     initialDifficulty: difficulty,
     onHit: (result) => {
       if (result.hit && result.arrow && result.rating) {
+        // Play sound effect based on rating
+        if (result.rating === 'perfect') {
+          playPerfect();
+        } else if (result.rating === 'good') {
+          playGood();
+        }
+
         // Add hit feedback for visual effect
         const feedback: HitFeedback = {
           id: `hit-${++hitFeedbackIdRef.current}`,
@@ -156,14 +183,19 @@ export function DanceGame({
     setPhase('playing');
     enableGestures();
     startGame();
-  }, [enableGestures, startGame]);
+    // Start music when game starts
+    if (isMusicReady) {
+      playMusic();
+    }
+  }, [enableGestures, startGame, isMusicReady, playMusic]);
 
   // Handle play again
   const handlePlayAgain = useCallback(() => {
     resetGame();
     setPhase('ready');
     setHitFeedback([]);
-  }, [resetGame]);
+    pauseMusic();
+  }, [resetGame, pauseMusic]);
 
   // Handle back to menu
   const handleBackToMenu = useCallback(() => {
@@ -171,8 +203,18 @@ export function DanceGame({
     setPhase('calibration');
     setCalibration(null);
     setHitFeedback([]);
+    pauseMusic();
     onBackToMenu?.();
-  }, [resetGame, onBackToMenu]);
+  }, [resetGame, onBackToMenu, pauseMusic]);
+
+  // Handle recalibration (for switching players)
+  const handleRecalibrate = useCallback(() => {
+    resetGame();
+    setPhase('calibration');
+    setCalibration(null);
+    setHitFeedback([]);
+    pauseMusic();
+  }, [resetGame, pauseMusic]);
 
   // Handle end game (manual)
   const handleEndGame = useCallback(() => {
@@ -245,12 +287,46 @@ export function DanceGame({
             </div>
           </div>
 
+          {/* Music preview */}
+          <div className="glass-card mb-4 rounded-2xl p-4 flex items-center justify-between">
+            <span className="text-white/70 text-sm">Background Music</span>
+            <div className="flex items-center gap-3">
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={volume}
+                onChange={(e) => setVolume(parseFloat(e.target.value))}
+                className="w-20 h-2 bg-white/20 rounded-lg appearance-none cursor-pointer"
+              />
+              <button
+                onClick={toggleMusic}
+                className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
+                  isMusicPlaying
+                    ? 'bg-sonic-speed/30 text-sonic-speed'
+                    : 'bg-white/10 text-white/70 hover:bg-white/20'
+                }`}
+              >
+                {isMusicPlaying ? '🔊 Playing' : '🔇 Preview'}
+              </button>
+            </div>
+          </div>
+
           {/* Start button */}
           <button
             onClick={handleStartGame}
             className="w-full rounded-xl bg-sonic-speed px-8 py-4 text-xl font-bold text-background transition-all hover:bg-sonic-speed/80 hover:scale-105 active:scale-95"
           >
             Start Game
+          </button>
+
+          {/* Recalibrate button */}
+          <button
+            onClick={handleRecalibrate}
+            className="mt-4 w-full rounded-xl border border-sonic-speed/50 px-8 py-3 font-semibold text-sonic-speed/80 transition-all hover:border-sonic-speed hover:text-sonic-speed"
+          >
+            Recalibrate (Switch Player)
           </button>
 
           {/* Back button */}
@@ -322,7 +398,40 @@ export function DanceGame({
           />
 
           {/* Game controls */}
-          <div className="flex gap-4">
+          <div className="flex gap-4 items-center">
+            {/* Music toggle button */}
+            <button
+              onClick={toggleMusic}
+              className={`rounded-lg border px-4 py-2 text-sm transition-all ${
+                isMusicPlaying
+                  ? 'border-sonic-speed/50 text-sonic-speed hover:border-sonic-speed'
+                  : 'border-white/20 text-white/70 hover:border-white/40'
+              }`}
+              title={isMusicPlaying ? 'Pause Music' : 'Play Music'}
+            >
+              {isMusicPlaying ? '🔊 Music' : '🔇 Music'}
+            </button>
+
+            {/* Volume slider */}
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={volume}
+              onChange={(e) => setVolume(parseFloat(e.target.value))}
+              className="w-20 h-2 bg-white/20 rounded-lg appearance-none cursor-pointer"
+              title="Volume"
+            />
+
+            <button
+              onClick={handleRecalibrate}
+              className="rounded-lg border border-sonic-speed/50 px-4 py-2 text-sm text-sonic-speed/70 transition-all hover:border-sonic-speed hover:text-sonic-speed"
+              title="Recalibrate for a different player"
+            >
+              Recalibrate
+            </button>
+
             <button
               onClick={handleEndGame}
               className="rounded-lg border border-white/20 px-4 py-2 text-sm text-white/70 transition-all hover:border-red-400/50 hover:text-red-400"
