@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ian's AI Games",
+  title: "Sean and Ian's AI Games",
   description: "Fun AI-powered games for kids",
 };
 
