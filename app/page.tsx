@@ -9,7 +9,7 @@ export default function Home() {
 
       <main className="relative z-10 flex flex-col items-center gap-12 text-center">
         <h1 className="neon-text text-5xl font-bold tracking-tight sm:text-6xl">
-          Ian&apos;s AI Games
+          Sean and Ian&apos;s AI Games
         </h1>
 
         <p className="max-w-md text-lg text-white/70">
